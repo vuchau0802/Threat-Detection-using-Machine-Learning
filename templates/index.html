@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Threat Detection</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f3e9;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+        
+        .static-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0a651f;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            height: 200px;
+            border: 2px solid #565857;
+            font-size: 1.2rem;
+        }
+        
+        .result {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .bullying {
+            background-color: #dc3545;
+        }
+        
+        .non-bullying {
+            background-color: #28a745;
+        }
+        
+        .highlight-box {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .badge {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Threat Detection using Machine Learning</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="static-title">Threat Detection</div>
+
+        <div class="form-group">
+            <textarea id="userText" class="form-control" placeholder="Enter text to analyze..."></textarea>
+            <small id="charCount" class="form-text text-muted mt-1">Words: 0 | Characters: 0</small>
+        </div>
+
+        <button id="analyzeBtn" class="btn btn-success btn-block">Analyze</button>
+
+        <!-- Result Section -->
+        <div id="resultSection" style="display: none;">
+            <div id="predictionResult" class="result"></div>
+
+            <div class="progress mt-3">
+                <div id="bullyingBar" class="progress-bar" role="progressbar" style="width: 0%">
+                    Bullying Percentage
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <span id="sentimentBadge" class="badge badge-secondary">Sentiment: N/A</span>
+            </div>
+
+            <div id="highlightedText" class="highlight-box mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        const textArea = document.getElementById('userText');
+        const charCount = document.getElementById('charCount');
+        const btn = document.getElementById('analyzeBtn');
+        const resultSection = document.getElementById('resultSection');
+        const predictionResult = document.getElementById('predictionResult');
+        const bullyingBar = document.getElementById('bullyingBar');
+        const sentimentBadge = document.getElementById('sentimentBadge');
+        const highlightedText = document.getElementById('highlightedText');
+
+        // Update word and character count
+        textArea.addEventListener('input', () => {
+            const text = textArea.value;
+            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+            charCount.textContent = `Words: ${wordCount} | Characters: ${text.length}`;
+        });
+
+        // Analyze text
+        btn.addEventListener('click', () => {
+            const inputText = textArea.value.trim();
+            if (!inputText) return alert("Input cannot be empty. Please provide some text to analyze.");
+
+            fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: inputText
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    resultSection.style.display = 'block';
+
+                    // Prediction result
+                    predictionResult.textContent = data.prediction === 1 ? "Bullying" : "Non-Bullying";
+                    predictionResult.className = `result ${data.prediction === 1 ? 'bullying' : 'non-bullying'}`;
+
+                    // Bullying percentage bar
+                    bullyingBar.style.width = `${data.bullying_percentage}%`;
+                    bullyingBar.textContent = `${data.bullying_percentage}% Bullying`;
+
+                    // Sentiment badge
+                    sentimentBadge.textContent = `Sentiment: ${data.sentiment}`;
+                    sentimentBadge.className = 'badge';
+                    if (data.sentiment === "Positive") {
+                        sentimentBadge.classList.add("badge-success");
+                    } else if (data.sentiment === "Negative") {
+                        sentimentBadge.classList.add("badge-danger");
+                    } else {
+                        sentimentBadge.classList.add("badge-secondary");
+                    }
+
+                    // Highlighted text
+                    highlightedText.innerHTML = data.highlighted;
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    alert("Something went wrong. Check the console.");
+                });
+        });
+    </script>
+
+    <!-- Bootstrap Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
