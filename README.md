@@ -3,8 +3,7 @@
 ---
 
 ## Overview  
-This project This study used five different classification models for the bullying identification task to evaluate the performance of each model. The analysis was based on several performance metrics, including reliability and accuracy values. The optimal model for each project depends on the specific needs of the application. Based on the evaluation of performance, **Linear SVC** emerged as the most effective choice for threat detection systems, providing a powerful combination of features.
-
+This project utilized various classification models to identify bullying, allowing for an evaluation of each model's performance. The analysis focused on several performance metrics, including reliability and accuracy. The ideal model for each project depends on the specific requirements of the application. Based on the performance evaluation, **Linear SVC** was found to be the most effective choice for threat detection systems, offering a strong combination of features.
 ---
 
 ## Features    
