@@ -9,9 +9,9 @@ app = Flask(__name__)
 with open("stopwords.txt", "r") as file:
     stopwords = file.read().splitlines()
 
-vocab = pickle.load(open("tfidfvectoizer.pkl", "rb"))
+vocab = pickle.load(open("Models/tfidfvectoizer.pkl", "rb"))
 vectorizer = TfidfVectorizer(stop_words=stopwords, lowercase=True, vocabulary=vocab)
-model = pickle.load(open("LinearSVCTuned.pkl", 'rb'))
+model = pickle.load(open("Models/LinearSVCTuned.pkl", 'rb'))
 
 # Optional: Simple keyword list to highlight bullying words
 bullying_keywords = ["idiot", "stupid", "dumb", "ugly", "hate", "loser", "kill", "fat", "die", "freak"]
