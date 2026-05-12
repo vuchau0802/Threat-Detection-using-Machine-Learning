@@ -4,180 +4,843 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Threat Detection</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <title>ThreatScan — Cyberbullying Detection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;600;800&family=Barlow:wght@300;400&display=swap" rel="stylesheet" />
+
     <style>
+        /* ── Variables ──────────────────────────────────────────────────── */
+        
+         :root {
+            --bg: #090b0f;
+            --surface: #0e1117;
+            --border: #1e2530;
+            --border-glow: #2a3a50;
+            --text: #c8d6e5;
+            --muted: #4a5a6e;
+            --accent: #00d4ff;
+            --danger: #ff3b5c;
+            --safe: #00e5a0;
+            --warn: #ffb800;
+            --mono: 'Share Tech Mono', monospace;
+            --display: 'Barlow Condensed', sans-serif;
+            --body: 'Barlow', sans-serif;
+        }
+        /* ── Reset & base ───────────────────────────────────────────────── */
+        
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f5f3e9;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--body);
+            font-weight: 300;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* Scanline overlay */
+        
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient( 0deg, transparent, transparent 2px, rgba(0, 0, 0, .15) 2px, rgba(0, 0, 0, .15) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        /* ── Navbar ─────────────────────────────────────────────────────── */
+        
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(9, 11, 15, .85);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
-        .container {
-            max-width: 800px;
-            margin-top: 50px;
-        }
-        
-        .static-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #0a651f;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .navbar-brand {
+        .nav-brand {
+            font-family: var(--display);
+            font-weight: 800;
             font-size: 1.1rem;
-            font-weight: bold;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            color: var(--accent);
         }
         
-        .form-control {
-            height: 200px;
-            border: 2px solid #565857;
-            font-size: 1.2rem;
+        .nav-brand span {
+            color: var(--text);
         }
         
-        .result {
+        .nav-status {
+            font-family: var(--mono);
+            font-size: .65rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--safe);
+            box-shadow: 0 0 6px var(--safe);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .3;
+            }
+        }
+        /* ── Page layout ────────────────────────────────────────────────── */
+        
+        .page {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+        }
+        /* ── Hero header ────────────────────────────────────────────────── */
+        
+        .hero {
             text-align: center;
-            font-size: 24px;
-            margin-top: 20px;
+            margin-bottom: 3rem;
+            animation: fadeDown .6s ease both;
+        }
+        
+        .hero-label {
+            font-family: var(--mono);
+            font-size: .65rem;
+            letter-spacing: .25em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: .75rem;
+        }
+        
+        .hero-title {
+            font-family: var(--display);
+            font-weight: 800;
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            line-height: .95;
+            text-transform: uppercase;
+            letter-spacing: -.01em;
             color: #fff;
-            padding: 10px;
-            border-radius: 5px;
         }
         
-        .bullying {
-            background-color: #dc3545;
+        .hero-title em {
+            font-style: normal;
+            color: var(--accent);
         }
         
-        .non-bullying {
-            background-color: #28a745;
+        .hero-sub {
+            margin-top: 1rem;
+            font-size: .9rem;
+            color: var(--muted);
+            letter-spacing: .04em;
+        }
+        /* ── Input card ─────────────────────────────────────────────────── */
+        
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.5rem;
+            position: relative;
+            animation: fadeUp .5s ease both;
+        }
+        /* Corner decorators */
+        
+        .card::before,
+        .card::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-color: var(--accent);
+            border-style: solid;
         }
         
-        .highlight-box {
-            margin-top: 15px;
-            font-size: 1.1rem;
-            background: #fff3cd;
-            border: 1px solid #ffeeba;
-            padding: 10px;
-            border-radius: 5px;
+        .card::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
         }
         
-        .badge {
+        .card::after {
+            bottom: -1px;
+            right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+        
+        .input-label {
+            font-family: var(--mono);
+            font-size: .65rem;
+            letter-spacing: .2em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: .6rem;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: .9rem;
+            line-height: 1.7;
+            padding: 1rem;
+            resize: vertical;
+            transition: border-color .2s;
+            outline: none;
+        }
+        
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent), inset 0 0 20px rgba(0, 212, 255, .03);
+        }
+        
+        textarea::placeholder {
+            color: var(--muted);
+        }
+        
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: .75rem;
+        }
+        
+        .counter {
+            font-family: var(--mono);
+            font-size: .65rem;
+            color: var(--muted);
+        }
+        /* ── Button ─────────────────────────────────────────────────────── */
+        
+        .btn-scan {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 3px;
+            font-family: var(--display);
+            font-weight: 600;
             font-size: 1rem;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: .7rem 2rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform .15s, box-shadow .15s;
+            width: 100%;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+        
+        .btn-scan::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, .25) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform .4s;
+        }
+        
+        .btn-scan:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .btn-scan:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 212, 255, .3);
+        }
+        
+        .btn-scan:active {
+            transform: translateY(0);
+        }
+        
+        .btn-scan:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+        
+        .btn-scan svg {
+            flex-shrink: 0;
+        }
+        /* ── Results section ────────────────────────────────────────────── */
+        
+        #resultSection {
+            margin-top: 2rem;
+            display: none;
+            animation: fadeUp .4s ease both;
+        }
+        /* Verdict banner */
+        
+        .verdict {
+            border-radius: 4px;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+        
+        .verdict::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: .08;
+            background: repeating-linear-gradient( -45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);
+            background-size: 8px 8px;
+        }
+        
+        .verdict.threat {
+            background: rgba(255, 59, 92, .08);
+            border: 1px solid rgba(255, 59, 92, .4);
+            color: var(--danger);
+        }
+        
+        .verdict.safe {
+            background: rgba(0, 229, 160, .08);
+            border: 1px solid rgba(0, 229, 160, .4);
+            color: var(--safe);
+        }
+        
+        .verdict-label {
+            font-family: var(--display);
+            font-weight: 800;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            letter-spacing: -.01em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        
+        .verdict-sub {
+            font-family: var(--mono);
+            font-size: .65rem;
+            letter-spacing: .15em;
+            opacity: .7;
+            margin-top: .25rem;
+        }
+        /* Confidence ring */
+        
+        .ring-wrap {
+            flex-shrink: 0;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .ring-wrap svg {
+            transform: rotate(-90deg);
+        }
+        
+        .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, .1);
+            stroke-width: 5;
+        }
+        
+        .ring-fill {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 220;
+            stroke-dashoffset: 220;
+            transition: stroke-dashoffset 1s cubic-bezier(.4, 0, .2, 1);
+        }
+        
+        .ring-val {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: .75rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        
+        .ring-val small {
+            font-size: .5rem;
+            opacity: .6;
+            font-weight: 400;
+        }
+        /* ── Metrics row ────────────────────────────────────────────────── */
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1rem 1.25rem;
+        }
+        
+        .metric-label {
+            font-family: var(--mono);
+            font-size: .6rem;
+            letter-spacing: .2em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: .4rem;
+        }
+        
+        .metric-value {
+            font-family: var(--display);
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #fff;
+        }
+        /* Confidence bar */
+        
+        .bar-track {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-top: .6rem;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 1s cubic-bezier(.4, 0, .2, 1);
+        }
+        /* Sentiment pill */
+        
+        .sentiment-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-family: var(--mono);
+            font-size: .75rem;
+            padding: .3rem .8rem;
+            border-radius: 2px;
+            margin-top: .5rem;
+            letter-spacing: .05em;
+        }
+        
+        .sentiment-pill.positive {
+            background: rgba(0, 229, 160, .12);
+            color: var(--safe);
+            border: 1px solid rgba(0, 229, 160, .3);
+        }
+        
+        .sentiment-pill.negative {
+            background: rgba(255, 59, 92, .12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 59, 92, .3);
+        }
+        
+        .sentiment-pill.neutral {
+            background: rgba(74, 90, 110, .15);
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+        /* ── Highlight box ──────────────────────────────────────────────── */
+        
+        .highlight-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .highlight-header {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, .02);
+        }
+        
+        .highlight-header-label {
+            font-family: var(--mono);
+            font-size: .6rem;
+            letter-spacing: .2em;
+            color: var(--muted);
+            text-transform: uppercase;
+            flex: 1;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .dot-r {
+            background: #ff5f57;
+        }
+        
+        .dot-y {
+            background: #febc2e;
+        }
+        
+        .dot-g {
+            background: #28c840;
+        }
+        
+        .highlight-body {
+            padding: 1.25rem;
+            font-family: var(--mono);
+            font-size: .88rem;
+            line-height: 1.8;
+            color: var(--text);
+            word-break: break-word;
+        }
+        /* Flask injects <mark> — override styles here */
+        
+        .highlight-body mark {
+            background: var(--danger) !important;
+            color: #fff !important;
+            padding: .1em .3em;
+            border-radius: 2px;
+            font-weight: 700;
+        }
+        /* ── Animations ─────────────────────────────────────────────────── */
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+        
+        @keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+        /* ── Loading spinner ────────────────────────────────────────────── */
+        
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 0, 0, .3);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        /* ── Responsive ─────────────────────────────────────────────────── */
+        
+        @media (max-width: 520px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            .verdict {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Threat Detection using Machine Learning</a>
+    <!-- ── Navbar ──────────────────────────────────────────────────────────── -->
+    <nav class="nav">
+        <div class="nav-brand">Threat<span>Scan</span></div>
+        <div class="nav-status">
+            <div class="status-dot"></div>
+            MODEL ONLINE · Logistic Regression + TF-IDF
+        </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="container">
-        <div class="static-title">Threat Detection</div>
+    <!-- ── Page ────────────────────────────────────────────────────────────── -->
+    <main class="page">
 
-        <div class="form-group">
-            <textarea id="userText" class="form-control" placeholder="Enter text to analyze..."></textarea>
-            <small id="charCount" class="form-text text-muted mt-1">Words: 0 | Characters: 0</small>
+        <!-- Hero -->
+        <header class="hero">
+            <div class="hero-label">// cyberbullying detection system</div>
+            <h1 class="hero-title">Threat<br><em>Detection</em></h1>
+            <p class="hero-sub">ML-powered analysis · Logistic Regression classifier · WordNet lexicon</p>
+        </header>
+
+        <!-- Input card -->
+        <div class="card">
+            <div class="input-label">// input &gt; text payload</div>
+            <textarea id="userText" placeholder="Paste or type text to scan…" spellcheck="false"></textarea>
+            <div class="input-footer">
+                <span class="counter" id="charCount">WORDS: 0 &nbsp;|&nbsp; CHARS: 0</span>
+            </div>
+            <button class="btn-scan" id="analyzeBtn">
+      <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+      </svg>
+      <div class="spinner" id="btnSpinner"></div>
+      <span id="btnText">Run Analysis</span>
+    </button>
         </div>
 
-        <button id="analyzeBtn" class="btn btn-success btn-block">Analyze</button>
+        <!-- Results -->
+        <section id="resultSection">
 
-        <!-- Result Section -->
-        <div id="resultSection" style="display: none;">
-            <div id="predictionResult" class="result"></div>
-
-            <div class="progress mt-3">
-                <div id="bullyingBar" class="progress-bar" role="progressbar" style="width: 0%">
-                    Bullying Percentage
+            <!-- Verdict banner -->
+            <div class="verdict" id="verdictBanner">
+                <div>
+                    <div class="verdict-label" id="verdictLabel">—</div>
+                    <div class="verdict-sub" id="verdictSub">AWAITING SCAN</div>
+                </div>
+                <div class="ring-wrap">
+                    <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle class="ring-bg" cx="40" cy="40" r="35"/>
+          <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="35"/>
+        </svg>
+                    <div class="ring-val" id="ringVal">
+                        <span id="ringPct">0%</span>
+                        <small>CONF.</small>
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-3 text-center">
-                <span id="sentimentBadge" class="badge badge-secondary">Sentiment: N/A</span>
+            <!-- Metrics row -->
+            <div class="metrics">
+
+                <div class="metric-card">
+                    <div class="metric-label">// bullying probability</div>
+                    <div class="metric-value" id="bullyingPct">—</div>
+                    <div class="bar-track">
+                        <div class="bar-fill" id="bullyingBar"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">// sentiment</div>
+                    <div class="metric-value" id="sentimentVal">—</div>
+                    <div id="sentimentPill"></div>
+                </div>
+
             </div>
 
-            <div id="highlightedText" class="highlight-box mt-4"></div>
-        </div>
-    </div>
+            <!-- Highlighted text -->
+            <div class="highlight-card">
+                <div class="highlight-header">
+                    <div class="dot dot-r"></div>
+                    <div class="dot dot-y"></div>
+                    <div class="dot dot-g"></div>
+                    <div class="highlight-header-label">// annotated · flagged tokens highlighted</div>
+                </div>
+                <div class="highlight-body" id="highlightedText"></div>
+            </div>
 
-    <!-- Script Section -->
+        </section>
+
+    </main>
+
     <script>
-        const textArea = document.getElementById('userText');
+        /* ── Elements ─────────────────────────────────────────────────── */
+        const textarea = document.getElementById('userText');
         const charCount = document.getElementById('charCount');
-        const btn = document.getElementById('analyzeBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const btnText = document.getElementById('btnText');
+        const btnIcon = document.getElementById('btnIcon');
+        const btnSpinner = document.getElementById('btnSpinner');
         const resultSection = document.getElementById('resultSection');
-        const predictionResult = document.getElementById('predictionResult');
+        const verdictBanner = document.getElementById('verdictBanner');
+        const verdictLabel = document.getElementById('verdictLabel');
+        const verdictSub = document.getElementById('verdictSub');
+        const ringFill = document.getElementById('ringFill');
+        const ringPct = document.getElementById('ringPct');
+        const ringVal = document.getElementById('ringVal');
+        const bullyingPct = document.getElementById('bullyingPct');
         const bullyingBar = document.getElementById('bullyingBar');
-        const sentimentBadge = document.getElementById('sentimentBadge');
+        const sentimentVal = document.getElementById('sentimentVal');
+        const sentimentPill = document.getElementById('sentimentPill');
         const highlightedText = document.getElementById('highlightedText');
 
-        // Update word and character count
-        textArea.addEventListener('input', () => {
-            const text = textArea.value;
-            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-            charCount.textContent = `Words: ${wordCount} | Characters: ${text.length}`;
+        const RING_CIRC = 2 * Math.PI * 35; // ≈ 219.9
+
+        /* ── Live counter ─────────────────────────────────────────────── */
+        textarea.addEventListener('input', () => {
+            const t = textarea.value;
+            const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+            charCount.textContent = `WORDS: ${words} | CHARS: ${t.length}`;
         });
 
-        // Analyze text
-        btn.addEventListener('click', () => {
-            const inputText = textArea.value.trim();
-            if (!inputText) return alert("Input cannot be empty. Please provide some text to analyze.");
+        /* ── Set ring progress ────────────────────────────────────────── */
+        function setRing(pct, color) {
+            const offset = RING_CIRC * (1 - pct / 100);
+            ringFill.style.strokeDashoffset = offset;
+            ringFill.style.stroke = color;
+            ringPct.textContent = Math.round(pct) + '%';
+            ringVal.style.color = color;
+        }
 
-            fetch('/predict', {
+        /* ── Render results ───────────────────────────────────────────── */
+        function renderResults(data) {
+            // Guard: if data is not a plain object, bail out cleanly
+            if (!data || typeof data !== 'object') {
+                alert('Analysis failed: unexpected response from server.');
+                return;
+            }
+
+            // Derive every field defensively with ?? so null/undefined/0 are all handled
+            const isThreat = data.prediction === 1;
+            const confidence = typeof data.confidence === 'number' ? data.confidence : 0;
+            const confPct = Math.round(confidence * 100);
+
+            // app.py doesn't return bullying_percentage — derive from confidence
+            const pct = typeof data.bullying_percentage === 'number' ?
+                data.bullying_percentage :
+                confPct;
+
+            const color = isThreat ? 'var(--danger)' : 'var(--safe)';
+
+            /* Verdict banner */
+            verdictBanner.className = `verdict ${isThreat ? 'threat' : 'safe'}`;
+            verdictLabel.textContent = isThreat ? 'THREAT DETECTED' : 'CONTENT SAFE';
+            verdictSub.textContent = isThreat ?
+                `CYBERBULLYING SIGNAL · ${pct}% CONFIDENCE` :
+                'NO BULLYING INDICATORS FOUND';
+
+            setRing(confPct, color);
+
+            /* Bullying % bar */
+            bullyingPct.textContent = pct + '%';
+            bullyingBar.style.width = pct + '%';
+            bullyingBar.style.background = isThreat ?
+                'linear-gradient(90deg, var(--danger), #ff6b85)' :
+                'linear-gradient(90deg, var(--safe), #33ffbe)';
+
+            /* Sentiment — app.py omits this field; derive a string that is always defined */
+            const sentimentRaw = (typeof data.sentiment === 'string' && data.sentiment.trim()) ?
+                data.sentiment.trim() :
+                isThreat ? 'Negative' : confPct >= 70 ? 'Positive' : 'Neutral';
+
+            // These calls are now safe — sentimentRaw is guaranteed to be a non-empty string
+            sentimentVal.textContent = sentimentRaw.toUpperCase();
+            const s = sentimentRaw.toLowerCase();
+            sentimentPill.innerHTML = `
+                <span class="sentiment-pill ${s}">
+                    ${s === 'positive' ? '▲' : s === 'negative' ? '▼' : '●'}
+                    ${sentimentRaw}
+                </span>`;
+
+            /* Highlighted text — app.py omits this field; fall back to escaped plain text */
+            const safeText = (typeof data.highlighted === 'string' && data.highlighted) ?
+                data.highlighted :
+                textarea.value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            highlightedText.innerHTML = safeText;
+
+            /* Show section */
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+
+        /* ── Set loading state ────────────────────────────────────────── */
+        function setLoading(loading) {
+            analyzeBtn.disabled = loading;
+            btnIcon.style.display = loading ? 'none' : 'block';
+            btnSpinner.style.display = loading ? 'block' : 'none';
+            btnText.textContent = loading ? 'Scanning…' : 'Run Analysis';
+        }
+
+        /* ── Analyze click ────────────────────────────────────────────── */
+        analyzeBtn.addEventListener('click', async() => {
+            const input = textarea.value.trim();
+            if (!input) {
+                textarea.focus();
+                textarea.style.borderColor = 'var(--danger)';
+                setTimeout(() => textarea.style.borderColor = '', 800);
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const res = await fetch('/api/v1/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        text: inputText
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
-                    }
-
-                    resultSection.style.display = 'block';
-
-                    // Prediction result
-                    predictionResult.textContent = data.prediction === 1 ? "Bullying" : "Non-Bullying";
-                    predictionResult.className = `result ${data.prediction === 1 ? 'bullying' : 'non-bullying'}`;
-
-                    // Bullying percentage bar
-                    bullyingBar.style.width = `${data.bullying_percentage}%`;
-                    bullyingBar.textContent = `${data.bullying_percentage}% Bullying`;
-
-                    // Sentiment badge
-                    sentimentBadge.textContent = `Sentiment: ${data.sentiment}`;
-                    sentimentBadge.className = 'badge';
-                    if (data.sentiment === "Positive") {
-                        sentimentBadge.classList.add("badge-success");
-                    } else if (data.sentiment === "Negative") {
-                        sentimentBadge.classList.add("badge-danger");
-                    } else {
-                        sentimentBadge.classList.add("badge-secondary");
-                    }
-
-                    // Highlighted text
-                    highlightedText.innerHTML = data.highlighted;
-                })
-                .catch(err => {
-                    console.error("Error:", err);
-                    alert("Something went wrong. Check the console.");
+                        text: input
+                    }),
                 });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                renderResults(data);
+            } catch (err) {
+                alert('Analysis failed: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        /* ── Allow Ctrl/Cmd+Enter to submit ──────────────────────────── */
+        textarea.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeBtn.click();
         });
     </script>
-
-    <!-- Bootstrap Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 
