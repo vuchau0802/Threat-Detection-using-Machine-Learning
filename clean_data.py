@@ -1,15 +1,3 @@
-"""
-clean_data.py
-=============
-Loads the raw dataset, cleans and preprocesses text,
-and saves the result as cleaned_dataset.csv.
-
-Usage:
-------
-pip install pandas nltk
-python clean_data.py
-"""
-
 import logging
 import re
 import string
@@ -18,28 +6,16 @@ import nltk
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 
-# =========================================================
-# LOGGING
-# =========================================================
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-# =========================================================
-# NLTK SETUP
-# =========================================================
-
 nltk.download("wordnet", quiet=True)
 nltk.download("omw-1.4", quiet=True)
 
 lemmatizer = WordNetLemmatizer()
-
-# =========================================================
-# LEETSPEAK NORMALIZATION
-# =========================================================
 
 LEET_MAP = {
     "1": "i",
@@ -52,16 +28,10 @@ LEET_MAP = {
     "7": "t",
 }
 
-
 def normalize_leetspeak(text: str) -> str:
     for k, v in LEET_MAP.items():
         text = text.replace(k, v)
     return text
-
-
-# =========================================================
-# TEXT CLEANING
-# =========================================================
 
 def clean_text(text: str) -> str:
     """Full preprocessing pipeline for a single text string."""
@@ -95,11 +65,6 @@ def clean_text(text: str) -> str:
     words = [lemmatizer.lemmatize(word) for word in words]
 
     return " ".join(words).strip()
-
-
-# =========================================================
-# DATASET LOADING & CLEANING
-# =========================================================
 
 def load_and_clean_dataset(
     input_path: str = "data/dataset.csv",
@@ -157,11 +122,6 @@ def load_and_clean_dataset(
     logger.info("Cleaned dataset saved to: %s", output_path)
 
     return df
-
-
-# =========================================================
-# MAIN
-# =========================================================
 
 if __name__ == "__main__":
     df = load_and_clean_dataset(
