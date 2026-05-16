@@ -1,6 +1,6 @@
-# ThreatIQ — Cyberbullying Detection
+# Threat Detection
  
-A cyberbullying and threat detection web application built with FastAPI, scikit-learn (Logistic Regression + TF-IDF), SQLite, and a real-time WebSocket dashboard.
+An AI-powered cybersecurity threat detection application built using Flask and Machine Learning. The system analyzes security-related text inputs and predicts whether they represent malicious or safe activity.
  
 ---
  
