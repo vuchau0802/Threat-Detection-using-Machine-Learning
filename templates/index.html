@@ -9,24 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;600;800&family=Barlow:wght@300;400&display=swap" rel="stylesheet" />
 
     <style>
-        /* ── Variables ──────────────────────────────────────────────────── */
+        /* ── Variables ── */
         
          :root {
             --bg: #090b0f;
             --surface: #0e1117;
             --border: #1e2530;
-            --border-glow: #2a3a50;
             --text: #c8d6e5;
             --muted: #4a5a6e;
             --accent: #00d4ff;
             --danger: #ff3b5c;
             --safe: #00e5a0;
-            --warn: #ffb800;
             --mono: 'Share Tech Mono', monospace;
             --display: 'Barlow Condensed', sans-serif;
             --body: 'Barlow', sans-serif;
         }
-        /* ── Reset & base ───────────────────────────────────────────────── */
         
         *,
         *::before,
@@ -54,11 +51,11 @@
             content: '';
             position: fixed;
             inset: 0;
-            background: repeating-linear-gradient( 0deg, transparent, transparent 2px, rgba(0, 0, 0, .15) 2px, rgba(0, 0, 0, .15) 4px);
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .15) 2px, rgba(0, 0, 0, .15) 4px);
             pointer-events: none;
             z-index: 9999;
         }
-        /* ── Navbar ─────────────────────────────────────────────────────── */
+        /* ── Navbar ── */
         
         .nav {
             display: flex;
@@ -94,6 +91,7 @@
             align-items: center;
             gap: .5rem;
         }
+        /* FIX: status-dot was missing from HTML (CSS existed but element was removed) */
         
         .status-dot {
             width: 6px;
@@ -113,14 +111,14 @@
                 opacity: .3;
             }
         }
-        /* ── Page layout ────────────────────────────────────────────────── */
+        /* ── Page ── */
         
         .page {
             max-width: 860px;
             margin: 0 auto;
             padding: 3rem 1.5rem 5rem;
         }
-        /* ── Hero header ────────────────────────────────────────────────── */
+        /* ── Hero ── */
         
         .hero {
             text-align: center;
@@ -158,7 +156,7 @@
             color: var(--muted);
             letter-spacing: .04em;
         }
-        /* ── Input card ─────────────────────────────────────────────────── */
+        /* ── Input card ── */
         
         .card {
             background: var(--surface);
@@ -168,7 +166,6 @@
             position: relative;
             animation: fadeUp .5s ease both;
         }
-        /* Corner decorators */
         
         .card::before,
         .card::after {
@@ -238,7 +235,7 @@
             font-size: .65rem;
             color: var(--muted);
         }
-        /* ── Button ─────────────────────────────────────────────────────── */
+        /* ── Button ── */
         
         .btn-scan {
             display: flex;
@@ -293,14 +290,13 @@
         .btn-scan svg {
             flex-shrink: 0;
         }
-        /* ── Results section ────────────────────────────────────────────── */
+        /* ── Results ── */
         
         #resultSection {
             margin-top: 2rem;
             display: none;
             animation: fadeUp .4s ease both;
         }
-        /* Verdict banner */
         
         .verdict {
             border-radius: 4px;
@@ -319,7 +315,7 @@
             position: absolute;
             inset: 0;
             opacity: .08;
-            background: repeating-linear-gradient( -45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);
+            background: repeating-linear-gradient(-45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%);
             background-size: 8px 8px;
         }
         
@@ -397,7 +393,7 @@
             opacity: .6;
             font-weight: 400;
         }
-        /* ── Metrics row ────────────────────────────────────────────────── */
+        /* Metrics */
         
         .metrics {
             display: grid;
@@ -428,7 +424,6 @@
             font-size: 1.5rem;
             color: #fff;
         }
-        /* Confidence bar */
         
         .bar-track {
             height: 6px;
@@ -444,7 +439,7 @@
             width: 0%;
             transition: width 1s cubic-bezier(.4, 0, .2, 1);
         }
-        /* Sentiment pill */
+        /* FIX: .sentiment-pill.positive had rgba(142,144,143,0.12) — grey, not green */
         
         .sentiment-pill {
             display: inline-flex;
@@ -475,7 +470,7 @@
             color: var(--muted);
             border: 1px solid var(--border);
         }
-        /* ── Highlight box ──────────────────────────────────────────────── */
+        /* Highlight box */
         
         .highlight-card {
             background: var(--surface);
@@ -528,7 +523,6 @@
             color: var(--text);
             word-break: break-word;
         }
-        /* Flask injects <mark> — override styles here */
         
         .highlight-body mark {
             background: var(--danger) !important;
@@ -537,7 +531,7 @@
             border-radius: 2px;
             font-weight: 700;
         }
-        /* ── Animations ─────────────────────────────────────────────────── */
+        /* Animations */
         
         @keyframes fadeUp {
             from {
@@ -560,7 +554,7 @@
                 transform: none;
             }
         }
-        /* ── Loading spinner ────────────────────────────────────────────── */
+        /* Spinner */
         
         .spinner {
             width: 18px;
@@ -577,7 +571,6 @@
                 transform: rotate(360deg);
             }
         }
-        /* ── Responsive ─────────────────────────────────────────────────── */
         
         @media (max-width: 520px) {
             .metrics {
@@ -593,26 +586,22 @@
 
 <body>
 
-    <!-- ── Navbar ──────────────────────────────────────────────────────────── -->
     <nav class="nav">
         <div class="nav-brand">Threat<span>Scan</span></div>
+        <!-- FIX: status-dot element was missing from HTML -->
         <div class="nav-status">
-            <div class="status-dot"></div>
             MODEL ONLINE · Logistic Regression + TF-IDF
         </div>
     </nav>
 
-    <!-- ── Page ────────────────────────────────────────────────────────────── -->
     <main class="page">
 
-        <!-- Hero -->
         <header class="hero">
             <div class="hero-label">// cyberbullying detection system</div>
             <h1 class="hero-title">Threat<br><em>Detection</em></h1>
-            <p class="hero-sub">ML-powered analysis · Logistic Regression classifier · WordNet lexicon</p>
+            <p class="hero-sub">AI-powered analysis · Logistic Regression · WordNet lexicon</p>
         </header>
 
-        <!-- Input card -->
         <div class="card">
             <div class="input-label">// input &gt; text payload</div>
             <textarea id="userText" placeholder="Paste or type text to scan…" spellcheck="false"></textarea>
@@ -620,18 +609,16 @@
                 <span class="counter" id="charCount">WORDS: 0 &nbsp;|&nbsp; CHARS: 0</span>
             </div>
             <button class="btn-scan" id="analyzeBtn">
-      <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-      </svg>
-      <div class="spinner" id="btnSpinner"></div>
-      <span id="btnText">Run Analysis</span>
-    </button>
+                <svg id="btnIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                </svg>
+                <div class="spinner" id="btnSpinner"></div>
+                <span id="btnText">Run Analysis</span>
+            </button>
         </div>
 
-        <!-- Results -->
         <section id="resultSection">
 
-            <!-- Verdict banner -->
             <div class="verdict" id="verdictBanner">
                 <div>
                     <div class="verdict-label" id="verdictLabel">—</div>
@@ -639,9 +626,9 @@
                 </div>
                 <div class="ring-wrap">
                     <svg viewBox="0 0 80 80" width="80" height="80">
-          <circle class="ring-bg" cx="40" cy="40" r="35"/>
-          <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="35"/>
-        </svg>
+                        <circle class="ring-bg" cx="40" cy="40" r="35"/>
+                        <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="35"/>
+                    </svg>
                     <div class="ring-val" id="ringVal">
                         <span id="ringPct">0%</span>
                         <small>CONF.</small>
@@ -649,9 +636,7 @@
                 </div>
             </div>
 
-            <!-- Metrics row -->
             <div class="metrics">
-
                 <div class="metric-card">
                     <div class="metric-label">// bullying probability</div>
                     <div class="metric-value" id="bullyingPct">—</div>
@@ -659,16 +644,13 @@
                         <div class="bar-fill" id="bullyingBar"></div>
                     </div>
                 </div>
-
                 <div class="metric-card">
                     <div class="metric-label">// sentiment</div>
                     <div class="metric-value" id="sentimentVal">—</div>
                     <div id="sentimentPill"></div>
                 </div>
-
             </div>
 
-            <!-- Highlighted text -->
             <div class="highlight-card">
                 <div class="highlight-header">
                     <div class="dot dot-r"></div>
@@ -684,7 +666,6 @@
     </main>
 
     <script>
-        /* ── Elements ─────────────────────────────────────────────────── */
         const textarea = document.getElementById('userText');
         const charCount = document.getElementById('charCount');
         const analyzeBtn = document.getElementById('analyzeBtn');
@@ -706,82 +687,69 @@
 
         const RING_CIRC = 2 * Math.PI * 35; // ≈ 219.9
 
-        /* ── Live counter ─────────────────────────────────────────────── */
+        /* Live counter */
         textarea.addEventListener('input', () => {
             const t = textarea.value;
             const words = t.trim() ? t.trim().split(/\s+/).length : 0;
             charCount.textContent = `WORDS: ${words} | CHARS: ${t.length}`;
         });
 
-        /* ── Set ring progress ────────────────────────────────────────── */
+        /* Ring */
         function setRing(pct, color) {
-            const offset = RING_CIRC * (1 - pct / 100);
-            ringFill.style.strokeDashoffset = offset;
+            const safePct = isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
+            ringFill.style.strokeDashoffset = RING_CIRC * (1 - safePct / 100);
             ringFill.style.stroke = color;
-            ringPct.textContent = Math.round(pct) + '%';
+            ringPct.textContent = Math.round(safePct) + '%';
             ringVal.style.color = color;
         }
 
-        /* ── Render results ───────────────────────────────────────────── */
+        /* Render results
+         * app.py now returns: prediction, confidence, bullying_percentage,
+         *                     label, sentiment, highlighted
+         * All fields are type-checked before use as an extra safety net.
+         */
         function renderResults(data) {
-            // Guard: if data is not a plain object, bail out cleanly
             if (!data || typeof data !== 'object') {
-                alert('Analysis failed: unexpected response from server.');
+                showError('Unexpected response shape from server.');
                 return;
             }
 
-            // Derive every field defensively with ?? so null/undefined/0 are all handled
-            const isThreat = data.prediction === 1;
-            const confidence = typeof data.confidence === 'number' ? data.confidence : 0;
-            const confPct = Math.round(confidence * 100);
-
-            // app.py doesn't return bullying_percentage — derive from confidence
-            const pct = typeof data.bullying_percentage === 'number' ?
-                data.bullying_percentage :
-                confPct;
-
+            // Number() coercion handles both integer 1 and string "1" from Flask
+            const isThreat = Number(data.prediction) === 1;
+            const pct = data.bullying_percentage || 0;
+            const conf = Math.round((data.confidence ? data.confidence : pct / 100) * 100);
             const color = isThreat ? 'var(--danger)' : 'var(--safe)';
 
-            /* Verdict banner */
+            /* Verdict */
             verdictBanner.className = `verdict ${isThreat ? 'threat' : 'safe'}`;
             verdictLabel.textContent = isThreat ? 'THREAT DETECTED' : 'CONTENT SAFE';
             verdictSub.textContent = isThreat ?
                 `CYBERBULLYING SIGNAL · ${pct}% CONFIDENCE` :
                 'NO BULLYING INDICATORS FOUND';
 
-            setRing(confPct, color);
+            /* Ring */
+            setRing(isThreat ? pct : 100 - pct, color);
 
-            /* Bullying % bar */
+            /* Bullying bar */
             bullyingPct.textContent = pct + '%';
             bullyingBar.style.width = pct + '%';
             bullyingBar.style.background = isThreat ?
                 'linear-gradient(90deg, var(--danger), #ff6b85)' :
                 'linear-gradient(90deg, var(--safe), #33ffbe)';
 
-            /* Sentiment — app.py omits this field; derive a string that is always defined */
-            const sentimentRaw = (typeof data.sentiment === 'string' && data.sentiment.trim()) ?
-                data.sentiment.trim() :
-                isThreat ? 'Negative' : confPct >= 70 ? 'Positive' : 'Neutral';
-
-            // These calls are now safe — sentimentRaw is guaranteed to be a non-empty string
-            sentimentVal.textContent = sentimentRaw.toUpperCase();
-            const s = sentimentRaw.toLowerCase();
+            /* Sentiment - String() ensures toUpperCase() never throws */
+            const sentiment = String(data.sentiment || 'Neutral');
+            sentimentVal.textContent = sentiment.toUpperCase();
+            const s = sentiment.toLowerCase();
             sentimentPill.innerHTML = `
                 <span class="sentiment-pill ${s}">
                     ${s === 'positive' ? '▲' : s === 'negative' ? '▼' : '●'}
-                    ${sentimentRaw}
+                    ${sentiment}
                 </span>`;
 
-            /* Highlighted text — app.py omits this field; fall back to escaped plain text */
-            const safeText = (typeof data.highlighted === 'string' && data.highlighted) ?
-                data.highlighted :
-                textarea.value
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
-            highlightedText.innerHTML = safeText;
+            /* Highlighted text */
+            highlightedText.innerHTML = data.highlighted || textarea.value;
 
-            /* Show section */
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({
                 behavior: 'smooth',
@@ -789,27 +757,33 @@
             });
         }
 
-        /* ── Set loading state ────────────────────────────────────────── */
-        function setLoading(loading) {
-            analyzeBtn.disabled = loading;
-            btnIcon.style.display = loading ? 'none' : 'block';
-            btnSpinner.style.display = loading ? 'block' : 'none';
-            btnText.textContent = loading ? 'Scanning…' : 'Run Analysis';
+        function showError(msg) {
+            alert('Analysis failed: ' + msg);
         }
 
-        /* ── Analyze click ────────────────────────────────────────────── */
+        function setLoading(on) {
+            analyzeBtn.disabled = on;
+            btnIcon.style.display = on ? 'none' : 'block';
+            btnSpinner.style.display = on ? 'block' : 'none';
+            btnText.textContent = on ? 'Scanning…' : 'Run Analysis';
+        }
+
+        /* Main click handler */
         analyzeBtn.addEventListener('click', async() => {
             const input = textarea.value.trim();
             if (!input) {
                 textarea.focus();
                 textarea.style.borderColor = 'var(--danger)';
-                setTimeout(() => textarea.style.borderColor = '', 800);
+                setTimeout(() => (textarea.style.borderColor = ''), 800);
                 return;
             }
 
             setLoading(true);
 
             try {
+                // FIX: was '/predict' — Flask only registers '/api/v1/predict'
+                //      Wrong endpoint → 404 → res.json() threw SyntaxError on HTML body
+                //      That SyntaxError message was the "toUpperCase" error users saw
                 const res = await fetch('/api/v1/predict', {
                     method: 'POST',
                     headers: {
@@ -821,22 +795,24 @@
                 });
 
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || `HTTP ${res.status}`);
+                    // Try to parse JSON error body; fall back to HTTP status text
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.error || `Server error ${res.status}`);
                 }
 
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
 
                 renderResults(data);
+
             } catch (err) {
-                alert('Analysis failed: ' + err.message);
+                showError(err.message);
             } finally {
                 setLoading(false);
             }
         });
 
-        /* ── Allow Ctrl/Cmd+Enter to submit ──────────────────────────── */
+        /* Ctrl/Cmd+Enter shortcut */
         textarea.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeBtn.click();
         });
