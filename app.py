@@ -4,8 +4,6 @@ import sqlite3
 import string
 from dataclasses import dataclass
 
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
 import asyncio
 import json
 
@@ -25,15 +23,9 @@ from nltk.stem import WordNetLemmatizer
 from datetime import datetime, timezone, timedelta
 
 CDT = timezone(timedelta(hours=-5))
-# =========================================================
-# LOGGING
-# =========================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# =========================================================
-# CONFIG
-# =========================================================
 @dataclass
 class Config:
     model_path: str = "models/LogisticRegression.pkl"
@@ -42,24 +34,16 @@ class Config:
 
 
 cfg = Config()
-
-# =========================================================
-# NLP INIT
-# =========================================================
 nltk.download("wordnet", quiet=True)
 lemmatizer = WordNetLemmatizer()
 
-# =========================================================
-# FASTAPI
-# =========================================================
 app = FastAPI(
-    title="ThreatIQ API",
+    title="Threat API",
     version="1.0.0"
 )
 
-# =========================================================
 # CORS
-# =========================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -67,18 +51,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# =========================================================
 # TEMPLATES
-# =========================================================
 templates = Jinja2Templates(directory="templates")
-
-# =========================================================
-# DATABASE
-# =========================================================
-# =========================================================
-# DB
-# =========================================================
 conn = sqlite3.connect("models/logs.db", check_same_thread=False)
 conn.row_factory = sqlite3.Row
 
@@ -96,14 +70,8 @@ CREATE TABLE IF NOT EXISTS logs (
 
 conn.commit()
 
-# =========================================================
 # LOAD MODEL
-# =========================================================
 model = joblib.load(cfg.model_path)
-
-# =========================================================
-# LEXICONS
-# =========================================================
 _POSITIVE_WORDS = frozenset({
     "happy", "good", "love", "great", "nice",
     "awesome", "wonderful", "excellent",
@@ -143,9 +111,6 @@ _FLAG_WORDS = sorted(
     reverse=True,
 )
 
-# =========================================================
-# REQUEST MODEL
-# =========================================================
 class PredictRequest(BaseModel):
     text: str
 
@@ -153,9 +118,7 @@ def get_current_time() -> str:
     """Return current UTC time as ISO 8601 string."""
     return datetime.now(CDT).isoformat()
  
-# =========================================================
 # HELPERS
-# =========================================================
 def clean_text(text: str) -> str:
 
     text = text.lower()
@@ -225,9 +188,8 @@ def highlight_keywords(text: str) -> str:
 
     return text
 
-# =========================================================
 # FRONTEND ROUTES
-# =========================================================
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
 
@@ -245,9 +207,6 @@ async def dashboard(request: Request):
         {"request": request}
     )
 
-# =========================================================
-# PREDICT API
-# =========================================================
 @app.post("/api/v1/predict")
 async def predict(payload: PredictRequest):
 
@@ -318,9 +277,6 @@ async def predict(payload: PredictRequest):
 
     return result
 
-# =========================================================
-# LOGS API
-# =========================================================
 @app.get("/api/v1/logs")
 def get_logs():
 
@@ -368,9 +324,6 @@ def get_logs():
 
     return results
 
-# =========================================================
-# ANALYTICS API
-# =========================================================
 @app.get("/api/v1/analytics")
 async def analytics():
 
@@ -421,40 +374,7 @@ async def analytics():
         }
     }
 
-# =========================================================
-# WEBSOCKET MONITOR
-# =========================================================
-connected_clients = []
-
-
-@app.websocket("/api/v1/ws/monitor")
-async def websocket_monitor(websocket: WebSocket):
-
-    await websocket.accept()
-
-    connected_clients.append(websocket)
-
-    logger.info("WebSocket client connected")
-
-    try:
-
-        while True:
-
-            # Send heartbeat every 2 seconds
-            await websocket.send_text(json.dumps({
-                "type": "ping"
-            }))
-
-            await asyncio.sleep(2)
-
-    except WebSocketDisconnect:
-
-        connected_clients.remove(websocket)
-
-        logger.info("WebSocket client disconnected")
-# =========================================================
 # HEALTH
-# =========================================================
 @app.get("/health")
 async def health():
 
@@ -464,12 +384,9 @@ async def health():
         "timestamp": get_current_time(),
     }
 
-# =========================================================
-# RUN
-# =========================================================
 if __name__ == "__main__":
 
-    logger.info("ThreatIQ API running... started at %s", get_current_time())
+    logger.info("Threat API running... started at %s", get_current_time())
 
     uvicorn.run(
         "app:app",
