@@ -1,3 +1,20 @@
+# ThreatIQ — Cyberbullying Detection
+ 
+A cyberbullying and threat detection web application built with FastAPI, scikit-learn (Logistic Regression + TF-IDF), SQLite, and a real-time WebSocket dashboard.
+ 
+---
+ 
+## Features
+ 
+- **Threat detection** — classifies text as Safe or Threat using a trained Logistic Regression model
+- **Hard threat override** — explicit violence keywords always trigger a threat flag regardless of model score
+- **Keyword highlighting** — flagged terms highlighted in the annotated output panel
+- **Sentiment detection** — Positive, Negative, or Neutral per prediction
+- **SQLite logging** — every prediction saved to `models/logs.db`
+- **Analytics dashboard** — total scans, threat rate, confidence averages, recent logs table
+- **WebSocket monitor** — real-time heartbeat connection at `/api/v1/ws/monitor`
+- **REST API** — predict, logs, analytics, and health endpoints
+
 ## Demo
 
 > Demo
