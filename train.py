@@ -16,15 +16,9 @@ from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-# =========================================================
-# LOGGING
-# =========================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# =========================================================
-# CONFIG
-# =========================================================
 @dataclass
 class Config:
     dataset_path: str = "data/cleaned_dataset.csv"
@@ -35,15 +29,9 @@ class Config:
 
 cfg = Config()
 
-# =========================================================
-# NLTK
-# =========================================================
 nltk.download("wordnet", quiet=True)
 lemmatizer = WordNetLemmatizer()
 
-# =========================================================
-# CLEANING
-# =========================================================
 def clean_text(text: str) -> str:
     text = text.lower()
     text = re.sub(r"http\S+|www\S+", "", text)
@@ -54,9 +42,6 @@ def clean_text(text: str) -> str:
     words = [lemmatizer.lemmatize(w) for w in words]
     return " ".join(words).strip()
 
-# =========================================================
-# LOAD DATA
-# =========================================================
 def load_dataset(path: str):
     df = pd.read_csv(path)
 
@@ -68,9 +53,6 @@ def load_dataset(path: str):
 
     return df
 
-# =========================================================
-# MODEL (LOGISTIC REGRESSION - BEST MODEL)
-# =========================================================
 def build_pipeline():
     return Pipeline([
         ("tfidf", TfidfVectorizer(
@@ -85,9 +67,6 @@ def build_pipeline():
         ))
     ])
 
-# =========================================================
-# TRAIN
-# =========================================================
 def train():
     df = load_dataset(cfg.dataset_path)
 
@@ -115,8 +94,5 @@ def train():
 
     return model
 
-# =========================================================
-# RUN
-# =========================================================
 if __name__ == "__main__":
     train()
