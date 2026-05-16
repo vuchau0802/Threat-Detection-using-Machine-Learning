@@ -9,8 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;600;800&family=Barlow:wght@300;400&display=swap" rel="stylesheet" />
 
     <style>
-        /* ── Variables ── */
-        
          :root {
             --bg: #090b0f;
             --surface: #0e1117;
@@ -45,7 +43,6 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-        /* Scanline overlay */
         
         body::before {
             content: '';
@@ -55,7 +52,6 @@
             pointer-events: none;
             z-index: 9999;
         }
-        /* ── Navbar ── */
         
         .nav {
             display: flex;
@@ -91,7 +87,6 @@
             align-items: center;
             gap: .5rem;
         }
-        /* FIX: status-dot was missing from HTML (CSS existed but element was removed) */
         
         .status-dot {
             width: 6px;
@@ -111,14 +106,12 @@
                 opacity: .3;
             }
         }
-        /* ── Page ── */
         
         .page {
             max-width: 860px;
             margin: 0 auto;
             padding: 3rem 1.5rem 5rem;
         }
-        /* ── Hero ── */
         
         .hero {
             text-align: center;
@@ -156,7 +149,6 @@
             color: var(--muted);
             letter-spacing: .04em;
         }
-        /* ── Input card ── */
         
         .card {
             background: var(--surface);
@@ -235,7 +227,6 @@
             font-size: .65rem;
             color: var(--muted);
         }
-        /* ── Button ── */
         
         .btn-scan {
             display: flex;
@@ -290,7 +281,6 @@
         .btn-scan svg {
             flex-shrink: 0;
         }
-        /* ── Results ── */
         
         #resultSection {
             margin-top: 2rem;
@@ -347,7 +337,6 @@
             opacity: .7;
             margin-top: .25rem;
         }
-        /* Confidence ring */
         
         .ring-wrap {
             flex-shrink: 0;
@@ -439,7 +428,6 @@
             width: 0%;
             transition: width 1s cubic-bezier(.4, 0, .2, 1);
         }
-        /* FIX: .sentiment-pill.positive had rgba(142,144,143,0.12) — grey, not green */
         
         .sentiment-pill {
             display: inline-flex;
@@ -470,7 +458,6 @@
             color: var(--muted);
             border: 1px solid var(--border);
         }
-        /* Highlight box */
         
         .highlight-card {
             background: var(--surface);
@@ -531,7 +518,6 @@
             border-radius: 2px;
             font-weight: 700;
         }
-        /* Animations */
         
         @keyframes fadeUp {
             from {
@@ -554,7 +540,6 @@
                 transform: none;
             }
         }
-        /* Spinner */
         
         .spinner {
             width: 18px;
@@ -588,7 +573,6 @@
 
     <nav class="nav">
         <div class="nav-brand">Threat<span>Scan</span></div>
-        <!-- FIX: status-dot element was missing from HTML -->
         <div class="nav-status">
             MODEL ONLINE · Logistic Regression + TF-IDF
         </div>
@@ -685,9 +669,7 @@
         const sentimentPill = document.getElementById('sentimentPill');
         const highlightedText = document.getElementById('highlightedText');
 
-        const RING_CIRC = 2 * Math.PI * 35; // ≈ 219.9
-
-        /* Live counter */
+        const RING_CIRC = 2 * Math.PI * 35;
         textarea.addEventListener('input', () => {
             const t = textarea.value;
             const words = t.trim() ? t.trim().split(/\s+/).length : 0;
@@ -703,18 +685,12 @@
             ringVal.style.color = color;
         }
 
-        /* Render results
-         * app.py now returns: prediction, confidence, bullying_percentage,
-         *                     label, sentiment, highlighted
-         * All fields are type-checked before use as an extra safety net.
-         */
         function renderResults(data) {
             if (!data || typeof data !== 'object') {
                 showError('Unexpected response shape from server.');
                 return;
             }
 
-            // Number() coercion handles both integer 1 and string "1" from Flask
             const isThreat = Number(data.prediction) === 1;
             const pct = data.bullying_percentage || 0;
             const conf = Math.round((data.confidence ? data.confidence : pct / 100) * 100);
@@ -737,7 +713,6 @@
                 'linear-gradient(90deg, var(--danger), #ff6b85)' :
                 'linear-gradient(90deg, var(--safe), #33ffbe)';
 
-            /* Sentiment - String() ensures toUpperCase() never throws */
             const sentiment = String(data.sentiment || 'Neutral');
             sentimentVal.textContent = sentiment.toUpperCase();
             const s = sentiment.toLowerCase();
@@ -781,9 +756,6 @@
             setLoading(true);
 
             try {
-                // FIX: was '/predict' — Flask only registers '/api/v1/predict'
-                //      Wrong endpoint → 404 → res.json() threw SyntaxError on HTML body
-                //      That SyntaxError message was the "toUpperCase" error users saw
                 const res = await fetch('/api/v1/predict', {
                     method: 'POST',
                     headers: {
@@ -812,7 +784,6 @@
             }
         });
 
-        /* Ctrl/Cmd+Enter shortcut */
         textarea.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeBtn.click();
         });

@@ -435,7 +435,6 @@
             </div>
         </div>
 
-        <!-- Recent logs table -->
         <div class="table-card">
             <div class="table-header">// recent threat logs</div>
             <table>
@@ -463,9 +462,6 @@
     <script>
         let TOKEN = null;
 
-
-        // ── Fetch recent logs ────────────────────────────────────
-        // ── Fetch recent logs ────────────────────────────────────
         async function loadLogs() {
 
             try {
@@ -566,8 +562,6 @@
                 }).join('');
         }
 
-        // ── Load analytics ───────────────────────────────────────
-        // ── Fetch analytics ─────────────────────────────────────
         async function loadAnalytics() {
 
             try {
@@ -612,7 +606,7 @@
 
             }
         }
-        // ── Init ─────────────────────────────────────────────────
+
         (async() => {
             await loadAnalytics();
             await loadLogs();
