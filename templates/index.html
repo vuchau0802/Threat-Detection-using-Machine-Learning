@@ -66,6 +66,18 @@
             z-index: 100;
         }
         
+        .verdict.harassment {
+            background: rgba(255, 184, 0, .08);
+            border: 1px solid rgba(255, 184, 0, .4);
+            color: #ffb800;
+        }
+        
+        .verdict.toxic {
+            background: rgba(168, 85, 247, .08);
+            border: 1px solid rgba(168, 85, 247, .4);
+            color: #a855f7;
+        }
+        
         .nav-brand {
             font-family: var(--display);
             font-weight: 800;
@@ -573,9 +585,6 @@
 
     <nav class="nav">
         <div class="nav-brand">Threat<span>Scan</span></div>
-        <div class="nav-status">
-            MODEL ONLINE · Logistic Regression + TF-IDF
-        </div>
     </nav>
 
     <main class="page">
@@ -583,7 +592,7 @@
         <header class="hero">
             <div class="hero-label">// cyberbullying detection system</div>
             <h1 class="hero-title">Threat<br><em>Detection</em></h1>
-            <p class="hero-sub">AI-powered analysis · Logistic Regression · WordNet lexicon</p>
+            <p class="hero-sub">AI-powered analysis</p>
         </header>
 
         <div class="card">
@@ -629,8 +638,8 @@
                     </div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">// sentiment</div>
-                    <div class="metric-value" id="sentimentVal">—</div>
+                    <div class="metric-label">// classification</div>
+                    <div class="metric-value" id="classificationVal">—</div>
                     <div id="sentimentPill"></div>
                 </div>
             </div>
@@ -665,6 +674,7 @@
         const ringVal = document.getElementById('ringVal');
         const bullyingPct = document.getElementById('bullyingPct');
         const bullyingBar = document.getElementById('bullyingBar');
+        const classificationVal = document.getElementById('classificationVal');
         const sentimentVal = document.getElementById('sentimentVal');
         const sentimentPill = document.getElementById('sentimentPill');
         const highlightedText = document.getElementById('highlightedText');
@@ -694,10 +704,44 @@
             const isThreat = Number(data.prediction) === 1;
             const pct = data.bullying_percentage || 0;
             const conf = Math.round((data.confidence ? data.confidence : pct / 100) * 100);
-            const color = isThreat ? 'var(--danger)' : 'var(--safe)';
 
-            /* Verdict */
-            verdictBanner.className = `verdict ${isThreat ? 'threat' : 'safe'}`;
+            const classMap = {
+                'threat': {
+                    label: 'Threat',
+                    bg: 'rgba(255,59,92,.12)',
+                    color: '#ff3b5c',
+                    border: 'rgba(255,59,92,.3)',
+                    icon: '⚠'
+                },
+                'harassment': {
+                    label: 'Harassment',
+                    bg: 'rgba(255,184,0,.12)',
+                    color: '#ffb800',
+                    border: 'rgba(255,184,0,.3)',
+                    icon: '⚡'
+                },
+                'toxic': {
+                    label: 'Toxic',
+                    bg: 'rgba(168,85,247,.12)',
+                    color: '#a855f7',
+                    border: 'rgba(168,85,247,.3)',
+                    icon: '☣'
+                },
+                'safe': {
+                    label: 'Safe',
+                    bg: 'rgba(0,229,160,.12)',
+                    color: '#00e5a0',
+                    border: 'rgba(0,229,160,.3)',
+                    icon: '✓'
+                },
+            };
+
+            const classification = String(data.classification || (isThreat ? 'Threat' : 'Safe'));
+            const key = classification.toLowerCase();
+            const cls = classMap[key] || (isThreat ? classMap['threat'] : classMap['safe']);
+            const color = cls.color;
+
+            verdictBanner.className = `verdict ${key in classMap ? key : (isThreat ? 'threat' : 'safe')}`;
             verdictLabel.textContent = isThreat ? 'THREAT DETECTED' : 'CONTENT SAFE';
             verdictSub.textContent = isThreat ?
                 `CYBERBULLYING SIGNAL · ${pct}% CONFIDENCE` :
@@ -709,18 +753,19 @@
             /* Bullying bar */
             bullyingPct.textContent = pct + '%';
             bullyingBar.style.width = pct + '%';
-            bullyingBar.style.background = isThreat ?
-                'linear-gradient(90deg, var(--danger), #ff6b85)' :
-                'linear-gradient(90deg, var(--safe), #33ffbe)';
+            bullyingBar.style.background = `linear-gradient(90deg, ${color}, ${color}88)`;
 
-            const sentiment = String(data.sentiment || 'Neutral');
-            sentimentVal.textContent = sentiment.toUpperCase();
-            const s = sentiment.toLowerCase();
+            /* Classification */
+            classificationVal.textContent = String(data.sentiment || 'Neutral').toUpperCase();
+
             sentimentPill.innerHTML = `
-                <span class="sentiment-pill ${s}">
-                    ${s === 'positive' ? '▲' : s === 'negative' ? '▼' : '●'}
-                    ${sentiment}
-                </span>`;
+    <span style="
+        display:inline-flex;align-items:center;gap:.4rem;
+        font-family:var(--mono);font-size:.75rem;
+        padding:.3rem .8rem;border-radius:2px;margin-top:.5rem;
+        letter-spacing:.05em;
+        background:${cls.bg};color:${cls.color};border:1px solid ${cls.border};
+    ">${cls.icon} ${cls.label}</span>`;
 
             /* Highlighted text */
             highlightedText.innerHTML = data.highlighted || textarea.value;
@@ -767,7 +812,6 @@
                 });
 
                 if (!res.ok) {
-                    // Try to parse JSON error body; fall back to HTTP status text
                     const errBody = await res.json().catch(() => ({}));
                     throw new Error(errBody.error || `Server error ${res.status}`);
                 }

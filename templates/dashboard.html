@@ -381,6 +381,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
@@ -400,7 +401,7 @@
 
         <div class="page-header">
             <h1>Analytics <em>Dashboard</em></h1>
-            <p>// real-time threat intelligence · auto-refreshes every 30s</p>
+            <p>// real-time threat intelligence</p>
         </div>
 
         <!-- KPI Stats -->
@@ -618,19 +619,6 @@
         })();
     </script>
 
-    <div id="map" style="height:500px"></div>
-
-    <script>
-        const map = L.map('map').setView([30.2672, -97.7431], 4);
-
-        L.tileLayer(
-            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-        ).addTo(map);
-
-        L.circle([30.2672, -97.7431], {
-            radius: 20000
-        }).addTo(map);
-    </script>
 </body>
 
 </html>
