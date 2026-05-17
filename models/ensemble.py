@@ -1,5 +1,6 @@
 import re
 import string
+import os
 import joblib
 import torch
 
@@ -9,10 +10,13 @@ from transformers import (
 )
 
 lr_model = joblib.load(
-    "models/LogisticRegression.pkl"
+    os.getenv("MODEL_PATH", "models/LogisticRegression.pkl")
 )
 
-MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
+MODEL_NAME = os.getenv(
+    "TRANSFORMER_MODEL",
+    "unitary/toxic-bert"
+)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
@@ -75,14 +79,55 @@ def get_transformer_score(text: str) -> float:
 
         outputs = transformer_model(**inputs)
 
-        probs = torch.softmax(
-            outputs.logits,
-            dim=1
-        )
+        logits = outputs.logits
 
-    negative_score = probs[0][0].item()
+        if logits.shape[-1] > 2:
+            probs = torch.sigmoid(logits)[0]
+            toxic_scores = []
 
-    return float(negative_score)
+            for idx, prob in enumerate(probs):
+                label = transformer_model.config.id2label.get(
+                    idx,
+                    str(idx)
+                ).lower()
+
+                if any(
+                    marker in label
+                    for marker in (
+                        "toxic",
+                        "threat",
+                        "insult",
+                        "obscene",
+                        "hate",
+                        "identity",
+                    )
+                ):
+                    toxic_scores.append(prob.item())
+
+            if toxic_scores:
+                return float(max(toxic_scores))
+
+            return float(probs.max().item())
+
+        probs = torch.softmax(logits, dim=1)[0]
+
+    label_scores = {
+        transformer_model.config.id2label.get(idx, str(idx)).lower(): prob.item()
+        for idx, prob in enumerate(probs)
+    }
+
+    for label, score in label_scores.items():
+        if any(
+            marker in label
+            for marker in ("toxic", "threat", "negative", "unsafe", "harm")
+        ):
+            return float(score)
+
+    for label, score in label_scores.items():
+        if any(marker in label for marker in ("safe", "neutral", "positive")):
+            return float(1 - score)
+
+    return float(max(label_scores.values()))
 
 def contains_hard_threat(text: str) -> bool:
 
