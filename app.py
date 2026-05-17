@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import asyncio
 import json
 
-import joblib
+from models.ensemble import ensemble_predict
 import nltk
 import uvicorn
 
@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from nltk.stem import WordNetLemmatizer
 
 from datetime import datetime, timezone, timedelta
+
 
 CDT = timezone(timedelta(hours=-5))
 logging.basicConfig(level=logging.INFO)
@@ -71,7 +72,6 @@ CREATE TABLE IF NOT EXISTS logs (
 conn.commit()
 
 # LOAD MODEL
-model = joblib.load(cfg.model_path)
 _POSITIVE_WORDS = frozenset({
     "happy", "good", "love", "great", "nice",
     "awesome", "wonderful", "excellent",
@@ -169,6 +169,52 @@ def detect_sentiment(text: str) -> str:
 
     return "Neutral"
 
+def classify_behavior(text: str) -> str:
+    
+    lower = text.lower()
+
+    if contains_hard_threat(lower):
+        return "Threat"
+
+    harassment_words = {
+        "hate",
+        "worthless",
+        "loser",
+        "idiot",
+        "stupid",
+        "pathetic",
+        "ugly",
+        "moron",
+    }
+
+    toxic_words = {
+        "annoying",
+        "dumb",
+        "freak",
+    }
+
+    positive_words = {
+        "great",
+        "love",
+        "awesome",
+        "wonderful",
+        "thank",
+    }
+
+    words = set(
+        re.findall(r"\b\w+\b", lower)
+    )
+
+    if words & harassment_words:
+        return "Harassment"
+
+    if words & toxic_words:
+        return "Toxic"
+
+    if words & positive_words:
+        return "Positive"
+
+    return "Safe"
 
 def highlight_keywords(text: str) -> str:
 
@@ -223,41 +269,64 @@ async def predict(payload: PredictRequest):
 
     cleaned = clean_text(text)
 
-    prediction = int(
-        model.predict([cleaned])[0]
-    )
+    ensemble_result = ensemble_predict(text)
 
-    probability = float(
-        model.predict_proba([cleaned])[0][1]
-    )
-
-    # Hard override for direct threats
     if contains_hard_threat(text):
+        ensemble_result["prediction"] = 1
+        ensemble_result["confidence"] = max(
+            ensemble_result["confidence"],
+            0.95
+        )
 
-        prediction = 1
+        ensemble_result["severity"] = "Critical"
+        ensemble_result["threat_category"] = "Violence"
+    
+    prediction = ensemble_result["prediction"]
 
-        probability = max(probability, 0.92)
+    probability = ensemble_result["confidence"]
 
-    bullying_percentage = (
-        round(probability * 100, 2)
-        if prediction == 1
-        else 0.0
-    )
+    bullying_percentage = round(probability * 100, 2)
 
     # Timestamp recorded at the moment of prediction
     now = get_current_time()
 
     result = {
         "prediction": prediction,
+
         "confidence": round(probability, 4),
+
         "bullying_percentage": bullying_percentage,
+
         "label": (
             "Threat"
             if prediction == 1
             else "Safe"
         ),
+
+        "severity": ensemble_result["severity"],
+
+        "threat_category": (
+            ensemble_result["threat_category"]
+        ),
+
+        "logistic_score": (
+            ensemble_result["logistic_score"]
+        ),
+
+        "transformer_score": (
+            ensemble_result["transformer_score"]
+        ),
+
+        "rule_boost": (
+            ensemble_result["rule_boost"]
+        ),
+
+        "classification": classify_behavior(text),
+
         "sentiment": detect_sentiment(text),
+
         "highlighted": highlight_keywords(text),
+
         "timestamp": now,
     }
 
@@ -268,10 +337,10 @@ async def predict(payload: PredictRequest):
     conn.commit()
 
     logger.info(
-        "pred=%d conf=%.4f sentiment=%s cleaned=%r",
+        "pred=%d conf=%.4f classification=%s cleaned=%r",
         prediction,
         probability,
-        result["sentiment"],
+        result["classification"],
         cleaned
     )
 
@@ -298,7 +367,10 @@ def get_logs():
 
     for row in rows:
 
+        text = row["text"]
+
         prediction = row["prediction"]
+
         confidence = float(row["confidence"])
 
         risk_score = round(confidence * 100)
@@ -307,18 +379,42 @@ def get_logs():
 
         if risk_score >= 85:
             severity = "Critical"
+
         elif risk_score >= 70:
             severity = "High"
+
         elif risk_score >= 40:
             severity = "Medium"
 
+        # REAL sentiment detection
+        # Sentiment mapping
+        if severity == "Low":
+            sentiment = "Positive"
+
+        elif severity == "Medium":
+            sentiment = "Neutral"
+
+        else:
+            sentiment = "Negative"
+
         results.append({
+
             "id": row["id"],
-            "threat_class": "Threat" if prediction == 1 else "Safe",
+
+            "threat_class": (
+                "Threat"
+                if prediction == 1
+                else "Safe"
+            ),
+
             "severity": severity,
+
             "confidence": confidence,
+
             "risk_score": risk_score,
-            "sentiment": "Negative" if prediction == 1 else "Neutral",
+
+            "sentiment": sentiment,
+
             "created_at": row["created_at"]
         })
 
@@ -350,7 +446,44 @@ async def analytics():
 
     avg_conf = cursor.fetchone()[0] or 0
 
+    cursor.execute("""
+        SELECT confidence
+        FROM logs
+    """)
+
+    severity_rows = cursor.fetchall()
+
+    severity_distribution = {
+        "Low": 0,
+        "Medium": 0,
+        "High": 0,
+        "Critical": 0
+    }
+
+    for row in severity_rows:
+
+        confidence = float(row[0])
+
+        risk_score = round(confidence * 100)
+
+        if risk_score >= 85:
+
+            severity_distribution["Critical"] += 1
+
+        elif risk_score >= 70:
+
+            severity_distribution["High"] += 1
+
+        elif risk_score >= 40:
+
+            severity_distribution["Medium"] += 1
+
+        else:
+
+            severity_distribution["Low"] += 1
+
     return {
+
         "total_scans": total_scans,
 
         "threats_detected": threats_detected,
@@ -360,18 +493,15 @@ async def analytics():
         "avg_risk": round(avg_conf * 100, 2),
 
         "class_distribution": {
+
             "Safe": (
                 total_scans - threats_detected
             ),
+
             "Threat": threats_detected
         },
 
-        "severity_distribution": {
-            "Low": 2,
-            "Medium": 4,
-            "High": 3,
-            "Critical": 1
-        }
+        "severity_distribution": severity_distribution
     }
 
 # HEALTH
