@@ -8,16 +8,10 @@ from transformers import (
     AutoModelForSequenceClassification
 )
 
-# =========================================================
-# LOAD CLASSICAL MODEL
-# =========================================================
 lr_model = joblib.load(
     "models/LogisticRegression.pkl"
 )
 
-# =========================================================
-# LOAD TRANSFORMER
-# =========================================================
 MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -28,9 +22,6 @@ transformer_model = AutoModelForSequenceClassification.from_pretrained(
 
 transformer_model.eval()
 
-# =========================================================
-# THREAT WORDS
-# =========================================================
 HARD_THREAT_WORDS = {
     "kill",
     "murder",
@@ -44,9 +35,6 @@ HARD_THREAT_WORDS = {
     "die",
 }
 
-# =========================================================
-# CLEAN TEXT
-# =========================================================
 def clean_text(text: str) -> str:
 
     text = text.lower()
@@ -63,9 +51,6 @@ def clean_text(text: str) -> str:
 
     return text.strip()
 
-# =========================================================
-# LOGISTIC REGRESSION SCORE
-# =========================================================
 def get_lr_score(text: str) -> float:
 
     cleaned = clean_text(text)
@@ -76,9 +61,6 @@ def get_lr_score(text: str) -> float:
 
     return float(score)
 
-# =========================================================
-# TRANSFORMER SCORE
-# =========================================================
 def get_transformer_score(text: str) -> float:
 
     inputs = tokenizer(
@@ -102,9 +84,6 @@ def get_transformer_score(text: str) -> float:
 
     return float(negative_score)
 
-# =========================================================
-# RULE ENGINE
-# =========================================================
 def contains_hard_threat(text: str) -> bool:
 
     words = set(
@@ -115,9 +94,6 @@ def contains_hard_threat(text: str) -> bool:
         words & HARD_THREAT_WORDS
     )
 
-# =========================================================
-# ENSEMBLE ENGINE
-# =========================================================
 def ensemble_predict(text: str):
 
     lr_score = get_lr_score(text)
