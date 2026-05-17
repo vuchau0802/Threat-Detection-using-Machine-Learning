@@ -1,0 +1,204 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  test:
+    name: Validate Python
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile source
+        run: python -m compileall app.py clean_data.py train.py AWS models
+
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  s3-artifacts:
+    name: Publish Model Artifacts to S3
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_S3_DEPLOY == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install S3 dependencies
+        run: pip install boto3 python-dotenv
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload artifacts
+        env:
+          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          AWS_S3_KEY: threat-detection/artifacts.zip
+        run: |
+          python AWS/s3_store.py upload
+
+  huggingface-space:
+    name: Publish to Hugging Face Space
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_HF_SPACE_DEPLOY == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Hugging Face CLI
+        run: curl -LsSf https://hf.co/cli/install.sh | bash -s
+
+      - name: Create Space if needed
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          hf repos create "$HF_SPACE" --type space --space-sdk docker --exist-ok
+
+      - name: Upload Space files
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          hf upload "$HF_SPACE" deploy/huggingface/README.md README.md --type space
+          hf upload "$HF_SPACE" app.py app.py --type space
+          hf upload "$HF_SPACE" AWS AWS --type space
+          hf upload "$HF_SPACE" models/ensemble.py models/ensemble.py --type space
+          hf upload "$HF_SPACE" templates templates --type space
+          hf upload "$HF_SPACE" requirements.txt requirements.txt --type space
+          hf upload "$HF_SPACE" Dockerfile Dockerfile --type space
+
+  ec2-deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    needs:
+      - docker
+      - s3-artifacts
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_EC2_DEPLOY == 'true' && needs.docker.result == 'success' && (needs.s3-artifacts.result == 'success' || needs.s3-artifacts.result == 'skipped')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy EC2 deployment files
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" "mkdir -p /tmp/threat-detection-deploy"
+          scp -i ~/.ssh/ec2_key deploy/ec2/docker-compose.yml deploy/ec2/setup.sh deploy/ec2/deploy.sh "$EC2_USER@$EC2_HOST:/tmp/threat-detection-deploy/"
+
+      - name: Run EC2 deployment
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}:latest
+          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          AWS_S3_KEY: threat-detection/artifacts.zip
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/ec2_key "$EC2_USER@$EC2_HOST" \
+            "IMAGE_NAME='$IMAGE_NAME' AWS_S3_BUCKET='$AWS_S3_BUCKET' AWS_S3_KEY='$AWS_S3_KEY' AWS_REGION='$AWS_REGION' AWS_ACCESS_KEY_ID='$AWS_ACCESS_KEY_ID' AWS_SECRET_ACCESS_KEY='$AWS_SECRET_ACCESS_KEY' GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd /tmp/threat-detection-deploy
+          chmod +x setup.sh deploy.sh
+          ./setup.sh
+          cp docker-compose.yml /opt/threat-detection/docker-compose.yml
+          cat > /opt/threat-detection/.env <<EOF
+          IMAGE_NAME=$IMAGE_NAME
+          APP_PORT=5000
+          MAX_INPUT_CHARS=2000
+          TRANSFORMER_MODEL=unitary/toxic-bert
+          S3_SYNC_ON_STARTUP=true
+          AWS_S3_BUCKET=$AWS_S3_BUCKET
+          AWS_S3_KEY=$AWS_S3_KEY
+          AWS_REGION=$AWS_REGION
+          AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+          AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+          GHCR_USERNAME=$GHCR_USERNAME
+          GHCR_TOKEN=$GHCR_TOKEN
+          EOF
+          cp deploy.sh /opt/threat-detection/deploy.sh
+          chmod +x /opt/threat-detection/deploy.sh
+          /opt/threat-detection/deploy.sh
+          REMOTE
