@@ -1,0 +1,16 @@
+.git
+.github
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+*.log
+resume.txt
+VuTrongChau_Resume.docx
+demo/
+models/logs.db
+data/dataset.csv

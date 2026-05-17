@@ -1,11 +1,18 @@
 import logging
+import os
 import re
 import sqlite3
 import string
 from dataclasses import dataclass
+from pathlib import Path
 
 import asyncio
 import json
+
+if os.getenv("S3_SYNC_ON_STARTUP", "false").lower() == "true":
+    from AWS.s3_store import sync_from_s3
+
+    sync_from_s3()
 
 from models.ensemble import ensemble_predict
 import nltk
@@ -29,9 +36,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Config:
-    model_path: str = "models/LogisticRegression.pkl"
-    dataset_path: str = "data/cleaned_dataset.csv"
-    max_input_chars: int = 2000
+    model_path: str = os.getenv("MODEL_PATH", "models/LogisticRegression.pkl")
+    dataset_path: str = os.getenv("DATASET_PATH", "data/cleaned_dataset.csv")
+    log_db_path: str = os.getenv("LOG_DB_PATH", "models/logs.db")
+    max_input_chars: int = int(os.getenv("MAX_INPUT_CHARS", "2000"))
 
 
 cfg = Config()
@@ -54,7 +62,8 @@ app.add_middleware(
 )
 # TEMPLATES
 templates = Jinja2Templates(directory="templates")
-conn = sqlite3.connect("models/logs.db", check_same_thread=False)
+Path(cfg.log_db_path).parent.mkdir(parents=True, exist_ok=True)
+conn = sqlite3.connect(cfg.log_db_path, check_same_thread=False)
 conn.row_factory = sqlite3.Row
 
 cursor = conn.cursor()

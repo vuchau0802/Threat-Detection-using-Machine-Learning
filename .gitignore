@@ -1,0 +1,17 @@
+.env
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+*.pem
+*.key
+*.crt
+*.zip
+demo/
+models/logs.db
+data/dataset.csv

@@ -1,0 +1,27 @@
+services:
+  threat-api:
+    build:
+      context: .
+    image: threat-detection:local
+    environment:
+      MODEL_PATH: ${MODEL_PATH:-/app/models/LogisticRegression.pkl}
+      DATASET_PATH: ${DATASET_PATH:-/app/data/cleaned_dataset.csv}
+      LOG_DB_PATH: ${LOG_DB_PATH:-/app/runtime/logs.db}
+      MAX_INPUT_CHARS: ${MAX_INPUT_CHARS:-2000}
+      TRANSFORMER_MODEL: ${TRANSFORMER_MODEL:-unitary/toxic-bert}
+      S3_SYNC_ON_STARTUP: ${S3_SYNC_ON_STARTUP:-false}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_S3_KEY: ${AWS_S3_KEY:-threat-detection/artifacts.zip}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    ports:
+      - "5000:5000"
+    volumes:
+      - threat-runtime:/app/runtime
+      - hf-cache:/app/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  threat-runtime:
+  hf-cache:
