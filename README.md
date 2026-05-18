@@ -1,19 +1,21 @@
 # Threat Detection
  
-An AI-powered cybersecurity threat detection application built using Flask and Machine Learning. The system analyzes security-related text inputs and predicts whether they represent malicious or safe activity.
+Threat Detection using Machine Learning is a FastAPI web app that detects toxic, threatening, and cyberbullying text using a hybrid machine learning approach. It combines a TF-IDF Logistic Regression model with Hugging Face Toxic-BERT to classify text as malicious or safe, provide confidence scores, severity levels, and threat categories. The system includes prediction APIs, scan history, keyword highlighting, and an analytics dashboard for monitoring detected threats.
  
 ---
  
 ## Features
  
-- **Threat detection** — classifies text as Safe or Threat using a trained Logistic Regression model
-- **Hard threat override** — explicit violence keywords always trigger a threat flag regardless of model score
-- **Keyword highlighting** — flagged terms highlighted in the annotated output panel
-- **Sentiment detection** — Positive, Negative, or Neutral per prediction
-- **SQLite logging** — every prediction saved to `models/logs.db`
-- **Analytics dashboard** — total scans, threat rate, confidence averages, recent logs table
-- **WebSocket monitor** — real-time heartbeat connection at `/api/v1/ws/monitor`
-- **REST API** — predict, logs, analytics, and health endpoints
+Detects toxic, threatening, and unsafe text
+Uses Logistic Regression + TF-IDF and Hugging Face Toxic-BERT
+Shows prediction label, confidence score, severity, and threat category
+Highlights flagged words in scanned text
+Stores scan history with SQLite
+Provides analytics dashboard for scans, risks, and severity
+Supports AWS S3 model/data storage
+Supports Docker and Docker Compose
+Includes GitHub Actions CI/CD
+Supports deployment to AWS EC2 and Hugging Face Spaces
 
 ## Step-by-Step Setup
 
@@ -37,39 +39,47 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Step 3 — Install dependencies
+### Step 3 — Activate virtual environment
 
 ```bash
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
 ```
 
-### Step 4 — Download NLTK data
- 
-```powershell
-python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
-```
- 
-### Step 5 — Prepare the dataset
- 
-```powershell
-python clean_data.py
-```
- 
-### Step 6 — Train the model
- 
-```powershell
-python train.py
+### Step 4 — Install dependencies
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-### Step 7 — Run the application
+### Step 5 — Set AWS S3 credentials
  
 ```powershell
-python app.py
+$env:AWS_S3_BUCKET="threat-detection-vutrongchau"
+$env:AWS_S3_KEY="threat-detection/artifacts.zip"
+$env:AWS_REGION="us-east-2"
+$env:AWS_ACCESS_KEY_ID="your-access-key-id"
+$env:AWS_SECRET_ACCESS_KEY="your-secret-access-key"
 ```
 
-### Step 8 — Open in browser
+### Step 6 — Install dependencies
 
-| http://127.0.0.1:5000/dashboard | Analytics Dashboard |
+```bash
+python AWS/s3_store.py download
+```
+
+### Step 7 — Run the app
+
+```bash
+python -m uvicorn app:app --host 127.0.0.1 --port 5000
+```
+
+### Step 8 — Open browser
+
+```bash
+http://127.0.0.1:5000
+http://127.0.0.1:5000/dashboard
+```
 
 ## Demo
 
