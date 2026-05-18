@@ -1,21 +1,21 @@
 # Threat Detection
  
-Threat Detection using Machine Learning is a FastAPI web app that detects toxic, threatening, and cyberbullying text using a hybrid machine learning approach. It combines a TF-IDF Logistic Regression model with Hugging Face Toxic-BERT to classify text as malicious or safe, provide confidence scores, severity levels, and threat categories. The system includes prediction APIs, scan history, keyword highlighting, and an analytics dashboard for monitoring detected threats.
+Threat Detection using Machine Learning is a FastAPI web app that detects toxic, threatening, and cyberbullying text using a hybrid machine learning approach. It combines a TF-IDF Logistic Regression model with Hugging Face Toxic-BERT to classify text as malicious or safe, provide confidence scores, severity levels, and threat categories.
+
+The system includes prediction APIs, scan history, keyword highlighting, AWS S3 artifact storage, Docker support, CI/CD automation, and an analytics dashboard for monitoring detected threats.
  
 ---
  
 ## Features
  
-- Detects toxic, threatening, and unsafe text
-- Uses Logistic Regression + TF-IDF and Hugging Face Toxic-BERT
-- Shows prediction label, confidence score, severity, and threat category
-- Highlights flagged words in scanned text
-- Stores scan history with SQLite
-- Provides analytics dashboard for scans, risks, and severity
-- Supports AWS S3 model/data storage
-- Supports Docker and Docker Compose
-- Includes GitHub Actions CI/CD
-- Supports deployment to AWS EC2 and Hugging Face Spaces
+- Detects toxic, threatening, cyberbullying, and unsafe text.
+- Uses a hybrid model: Logistic Regression + TF-IDF + Hugging Face Toxic-BERT.
+- Returns prediction label, confidence score, severity, threat category, sentiment, and highlighted keywords.
+- Provides a web scanner UI and analytics dashboard.
+- Stores scan history in SQLite.
+- Supports model/data artifact upload and download with AWS S3.
+- Supports Docker and Docker Compose for local and production-style runs.
+- Includes GitHub Actions CI/CD for validation, Docker image publishing, S3 artifact upload, Hugging Face Space deployment, and AWS EC2 deployment.
 
 ## Step-by-Step Setup
 
