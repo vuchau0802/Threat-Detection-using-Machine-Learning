@@ -21,7 +21,7 @@ The system includes prediction APIs, scan history, keyword highlighting, AWS S3 
 
 ### Step 1 — Clone the repository
 ```bash
-git clone https://github.com/Threat-Detection-using-Machine-Learning.git
+git clone https://github.com/vuchau0802/Threat-Detection-using-Machine-Learning.git
 cd Threat-Detection-using-Machine-Learning
 ```
 
