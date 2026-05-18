@@ -6,16 +6,16 @@ Threat Detection using Machine Learning is a FastAPI web app that detects toxic,
  
 ## Features
  
-Detects toxic, threatening, and unsafe text
-Uses Logistic Regression + TF-IDF and Hugging Face Toxic-BERT
-Shows prediction label, confidence score, severity, and threat category
-Highlights flagged words in scanned text
-Stores scan history with SQLite
-Provides analytics dashboard for scans, risks, and severity
-Supports AWS S3 model/data storage
-Supports Docker and Docker Compose
-Includes GitHub Actions CI/CD
-Supports deployment to AWS EC2 and Hugging Face Spaces
+- Detects toxic, threatening, and unsafe text
+- Uses Logistic Regression + TF-IDF and Hugging Face Toxic-BERT
+- Shows prediction label, confidence score, severity, and threat category
+- Highlights flagged words in scanned text
+- Stores scan history with SQLite
+- Provides analytics dashboard for scans, risks, and severity
+- Supports AWS S3 model/data storage
+- Supports Docker and Docker Compose
+- Includes GitHub Actions CI/CD
+- Supports deployment to AWS EC2 and Hugging Face Spaces
 
 ## Step-by-Step Setup
 
